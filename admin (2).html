@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YTCreator — Admin Panel</title>
+<style>
+:root{
+  --bg:#080808;--surface:#111;--surface2:#1a1a1a;--surface3:#222;
+  --border:#252525;--border2:#333;
+  --text:#f0f0f0;--muted:#555;--muted2:#777;
+  --red:#ff3333;--red2:#cc1111;
+  --green:#22c55e;--yellow:#f59e0b;--blue:#3b82f6;--purple:#a855f7;--orange:#f97316;
+  --font:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+input,button{font-family:var(--font);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(255,51,51,.1) 0%,transparent 70%);}
+.login-box{width:380px;background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:36px;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo-icon{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;background:var(--red);border-radius:12px;font-size:22px;margin-bottom:10px;}
+.login-logo h1{font-size:22px;font-weight:800;}
+.login-logo h1 span{color:var(--red);}
+.login-logo p{font-size:12px;color:var(--muted2);margin-top:4px;}
+.login-err{background:rgba(255,51,51,.1);border:1px solid rgba(255,51,51,.3);border-radius:8px;padding:9px 13px;font-size:12px;color:var(--red);margin-bottom:14px;display:none;}
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:11px;color:var(--muted2);margin-bottom:5px;font-weight:500;letter-spacing:.3px;}
+.fg input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;color:var(--text);font-size:13px;outline:none;transition:.2s;}
+.fg input:focus{border-color:var(--red);}
+.fg input::placeholder{color:var(--muted);}
+.btn-login{width:100%;padding:11px;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;margin-top:4px;}
+.btn-login:hover{background:var(--red2);}
+.admin-hint{margin-top:16px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px 13px;font-size:11px;color:var(--yellow);line-height:1.6;}
+
+/* ── MAIN PANEL ── */
+#panel{display:none;flex-direction:column;min-height:100vh;}
+
+/* HEADER */
+.ah{background:var(--surface);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:50;}
+.ah-left{display:flex;align-items:center;gap:10px;}
+.ah-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.5px;}
+.ah-title{font-size:15px;font-weight:700;}
+.ah-clock{font-size:12px;color:var(--muted2);}
+.ah-clock b{color:var(--yellow);}
+.ah-right{display:flex;align-items:center;gap:10px;}
+.btn-sm{padding:6px 14px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--muted2);font-size:12px;cursor:pointer;transition:.15s;}
+.btn-sm:hover{border-color:var(--red);color:var(--red);}
+.btn-sm.danger{border-color:rgba(255,51,51,.3);color:var(--red);}
+.btn-sm.danger:hover{background:rgba(255,51,51,.1);}
+
+/* LAYOUT */
+.panel-body{display:grid;grid-template-columns:200px 1fr;flex:1;}
+
+/* SIDEBAR */
+.psb{background:var(--surface);border-right:1px solid var(--border);padding:16px 0;}
+.psb-section{margin-bottom:8px;}
+.psb-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:0 14px;margin-bottom:6px;}
+.psb-item{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:13px;color:var(--muted2);cursor:pointer;border-left:2px solid transparent;transition:.15s;}
+.psb-item:hover{background:var(--surface2);color:var(--text);}
+.psb-item.active{background:var(--surface2);color:var(--text);border-left-color:var(--red);}
+.psb-item .si{font-size:14px;width:16px;text-align:center;}
+.psb-stat{margin:14px 12px 0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;}
+.psb-stat-val{font-size:20px;font-weight:700;color:var(--red);}
+.psb-stat-lbl{font-size:11px;color:var(--muted2);margin-top:2px;}
+
+/* MAIN */
+.pmain{overflow-y:auto;padding:20px;}
+.tab{display:none;}
+.tab.active{display:block;}
+
+/* TOP STATS */
+.ts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.ts{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.ts-v{font-size:22px;font-weight:700;margin-bottom:2px;}
+.ts-l{font-size:11px;color:var(--muted);}
+.ts-c{font-size:11px;margin-top:3px;}
+
+/* TABLE */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.tbl-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+.tbl-title{font-size:14px;font-weight:600;}
+.tbl-actions{display:flex;gap:8px;align-items:center;}
+.search-inp{background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:6px 12px;color:var(--text);font-size:12px;outline:none;width:200px;}
+.search-inp:focus{border-color:var(--red);}
+.search-inp::placeholder{color:var(--muted);}
+table{width:100%;border-collapse:collapse;}
+thead tr{border-bottom:1px solid var(--border2);}
+th{text-align:left;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;padding:10px 16px;font-weight:500;white-space:nowrap;cursor:pointer;user-select:none;}
+th:hover{color:var(--text);}
+th.sorted{color:var(--yellow);}
+td{padding:12px 16px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.av{width:28px;height:28px;border-radius:50%;background:var(--surface3);display:inline-flex;align-items:center;justify-content:center;font-size:14px;}
+.online-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.online-pill.on{background:rgba(34,197,94,.1);color:var(--green);}
+.online-pill.off{background:var(--surface3);color:var(--muted2);}
+.dot{width:6px;height:6px;border-radius:50%;}
+.dot.on{background:var(--green);animation:pulse 1.8s infinite;}
+.dot.off{background:var(--muted);}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.5);}70%{box-shadow:0 0 0 5px rgba(34,197,94,0);}100%{box-shadow:0 0 0 0 rgba(34,197,94,0);}}
+.pass-cell{font-family:monospace;font-size:11px;color:var(--muted2);}
+.pass-cell .show-btn{margin-left:6px;font-size:10px;color:var(--blue);cursor:pointer;background:none;border:none;padding:0;}
+.show-btn:hover{text-decoration:underline;color:var(--blue);}
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;}
+.b-red{background:rgba(255,51,51,.15);color:var(--red);}
+.b-green{background:rgba(34,197,94,.15);color:var(--green);}
+.b-blue{background:rgba(59,130,246,.15);color:var(--blue);}
+.b-yellow{background:rgba(245,158,11,.15);color:var(--yellow);}
+.b-purple{background:rgba(168,85,247,.15);color:var(--purple);}
+.b-orange{background:rgba(249,115,22,.15);color:var(--orange);}
+.action-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;font-size:11px;cursor:pointer;color:var(--muted2);transition:.15s;}
+.action-btn:hover{border-color:var(--red);color:var(--red);}
+.action-btn.del:hover{background:rgba(255,51,51,.1);}
+
+/* PLAYER DETAIL MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:680px;max-height:85vh;overflow-y:auto;}
+.modal-hd{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:2;}
+.modal-hd h2{font-size:16px;font-weight:700;}
+.modal-close{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{color:var(--red);}
+.modal-body{padding:20px 24px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
+.detail-stat{background:var(--surface2);border-radius:8px;padding:12px 14px;}
+.detail-stat-v{font-size:18px;font-weight:700;margin-bottom:2px;}
+.detail-stat-l{font-size:11px;color:var(--muted);}
+.section-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;font-weight:600;}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.info-row:last-child{border-bottom:none;}
+.info-key{color:var(--muted2);}
+.info-val{color:var(--text);font-weight:500;}
+.vid-mini{padding:8px 0;border-bottom:1px solid var(--border);}
+.vid-mini:last-child{border-bottom:none;}
+.vid-mini-tt{font-size:12px;font-weight:500;margin-bottom:3px;}
+.vid-mini-st{display:flex;gap:12px;font-size:11px;color:var(--muted2);}
+
+/* WORLD STATS */
+.wstat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.wstat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;}
+.wstat-v{font-size:24px;font-weight:800;margin-bottom:4px;}
+.wstat-l{font-size:12px;color:var(--muted);}
+
+/* ACTIVITY LOG */
+.act-item{padding:10px 0;border-bottom:1px solid var(--border);font-size:12px;display:flex;gap:10px;}
+.act-item:last-child{border-bottom:none;}
+.act-time{color:var(--muted);white-space:nowrap;min-width:80px;}
+.act-msg{color:var(--muted2);flex:1;}
+.act-msg b{color:var(--text);}
+
+/* DANGER ZONE */
+.danger-card{background:rgba(255,51,51,.05);border:1px solid rgba(255,51,51,.2);border-radius:10px;padding:16px;margin-bottom:12px;}
+.danger-card h3{font-size:13px;font-weight:600;color:var(--red);margin-bottom:6px;}
+.danger-card p{font-size:12px;color:var(--muted2);margin-bottom:12px;}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:13px;}
+
+/* REFRESH BADGE */
+.live-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--green);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:20px;padding:3px 10px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;}
+
+/* CONFIRM MODAL */
+.confirm-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;}
+.confirm-bg.show{display:flex;}
+.confirm-box{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:28px;width:360px;text-align:center;}
+.confirm-box h3{font-size:16px;font-weight:700;margin-bottom:8px;}
+.confirm-box p{font-size:13px;color:var(--muted2);margin-bottom:22px;}
+.confirm-btns{display:flex;gap:10px;justify-content:center;}
+.cbtn{padding:9px 22px;border-radius:8px;border:none;font-size:13px;font-weight:500;cursor:pointer;}
+.cbtn-cancel{background:var(--surface2);color:var(--muted2);}
+.cbtn-danger{background:var(--red);color:#fff;}
+
+/* SORT ARROW */
+.sort-arrow{margin-left:3px;opacity:.4;}
+.sort-arrow.active{opacity:1;color:var(--yellow);}
+</style>
+</head>
+<body>
+
+<!-- CONFIRM MODAL -->
+<div class="confirm-bg" id="confirmBg">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMsg">This action cannot be undone.</p>
+    <div class="confirm-btns">
+      <button class="cbtn cbtn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="cbtn cbtn-danger" id="confirmOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER DETAIL MODAL -->
+<div class="modal-bg" id="playerModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <h2 id="modalTitle">Player Details</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">⚙️</div>
+      <h1><span>YT</span>Creator <span style="color:var(--muted2);font-weight:400;font-size:16px">Admin</span></h1>
+      <p>Restricted access — authorized personnel only</p>
+    </div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="fg"><label>ADMIN USERNAME</label><input id="adminUser" placeholder="admin" autocomplete="off"></div>
+    <div class="fg"><label>ADMIN PASSWORD</label><input type="password" id="adminPass" placeholder="••••••••"></div>
+    <button class="btn-login" onclick="doAdminLogin()">Access Panel</button>
+    <div class="admin-hint">
+      ⚠️ Default credentials:<br>
+      Username: <b>admin</b> &nbsp;|&nbsp; Password: <b>admin123</b><br>
+      Change these in the Settings tab after login.
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="panel">
+  <!-- HEADER -->
+  <div class="ah">
+    <div class="ah-left">
+      <span class="ah-badge">ADMIN</span>
+      <span class="ah-title">YTCreator Control Panel</span>
+      <div class="live-badge"><span class="live-dot"></span> Live</div>
+    </div>
+    <div class="ah-clock">World Time: <b id="ahClock">—</b></div>
+    <div class="ah-right">
+      <span style="font-size:12px;color:var(--muted2);">Logged in as <b id="adminNameDisp">admin</b></span>
+      <button class="btn-sm danger" onclick="adminLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="panel-body">
+    <!-- SIDEBAR -->
+    <div class="psb">
+      <div class="psb-section">
+        <div class="psb-label">Overview</div>
+        <div class="psb-item active" onclick="goTab('players')"><span class="si">👥</span> All Players</div>
+        <div class="psb-item" onclick="goTab('worldstats')"><span class="si">🌍</span> World Stats</div>
+        <div class="psb-item" onclick="goTab('activity')"><span class="si">📋</span> Activity Log</div>
+      </div>
+      <div class="psb-section">
+        <div class="psb-label">Management</div>
+        <div class="psb-item" onclick="goTab('online')"><span class="si">🟢</span> Online Now</div>
+        <div class="psb-item" onclick="goTab('toplist')"><span class="si">🏆</span> Top Players</div>
+        <div class="psb-item" onclick="goTab('danger')"><span class="si">⚠️</span> Danger Zone</div>
+      </div>
+      <div class="psb-section">
+        <div class="psb-label">Admin</div>
+        <div class="psb-item" onclick="goTab('settings')"><span class="si">⚙️</span> Settings</div>
+      </div>
+      <div class="psb-stat">
+        <div class="psb-stat-val" id="sbTotalPlayers">0</div>
+        <div class="psb-stat-lbl">Total Registered</div>
+      </div>
+      <div class="psb-stat" style="margin-top:8px;">
+        <div class="psb-stat-val" style="color:var(--green)" id="sbOnline">0</div>
+        <div class="psb-stat-lbl">Currently Online</div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="pmain">
+
+      <!-- ALL PLAYERS -->
+      <div class="tab active" id="tab-players">
+        <div class="ts-grid">
+          <div class="ts"><div class="ts-v" id="tsTotal">0</div><div class="ts-l">👥 Total Players</div></div>
+          <div class="ts"><div class="ts-v" style="color:var(--green)" id="tsOnline">0</div><div class="ts-l">🟢 Online Now</div></div>
+          <div class="ts"><div class="ts-v" style="color:var(--yellow)" id="tsNewToday">0</div><div class="ts-l">🆕 Joined Today</div></div>
+          <div class="ts"><div class="ts-v" style="color:var(--blue)" id="tsAvgSubs">0</div><div class="ts-l">📊 Avg Subscribers</div></div>
+        </div>
+        <div class="tbl-wrap">
+          <div class="tbl-head">
+            <div class="tbl-title">Player Accounts</div>
+            <div class="tbl-actions">
+              <input class="search-inp" id="searchInp" placeholder="🔍  Search username or channel..." oninput="renderPlayers()">
+              <button class="btn-sm" onclick="renderPlayers()">↻ Refresh</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th onclick="sortBy('username')">#  Username <span class="sort-arrow" id="sa-username"></span></th>
+                  <th onclick="sortBy('channelName')">Channel <span class="sort-arrow" id="sa-channelName"></span></th>
+                  <th>Password</th>
+                  <th onclick="sortBy('niche')">Niche <span class="sort-arrow" id="sa-niche"></span></th>
+                  <th onclick="sortBy('subs')">Subscribers <span class="sort-arrow" id="sa-subs"></span></th>
+                  <th onclick="sortBy('views')">Views <span class="sort-arrow" id="sa-views"></span></th>
+                  <th onclick="sortBy('money')">Revenue <span class="sort-arrow" id="sa-money"></span></th>
+                  <th onclick="sortBy('videos')">Videos <span class="sort-arrow" id="sa-videos"></span></th>
+                  <th onclick="sortBy('level')">Level <span class="sort-arrow" id="sa-level"></span></th>
+                  <th onclick="sortBy('lastSeen')">Last Online <span class="sort-arrow" id="sa-lastSeen"></span></th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="playersTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORLD STATS -->
+      <div class="tab" id="tab-worldstats">
+        <div style="margin-bottom:16px;"><div style="font-size:18px;font-weight:700;">World Statistics</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Aggregated data across all players</div></div>
+        <div class="wstat-grid" id="wstatGrid"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="tbl-wrap">
+            <div class="tbl-head"><div class="tbl-title">🎮 Niche Distribution</div></div>
+            <div style="padding:4px 0;" id="nicheDistrib"></div>
+          </div>
+          <div class="tbl-wrap">
+            <div class="tbl-head"><div class="tbl-title">📅 Registrations Over Time</div></div>
+            <div style="padding:14px;" id="regChart"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY LOG -->
+      <div class="tab" id="tab-activity">
+        <div style="margin-bottom:16px;"><div style="font-size:18px;font-weight:700;">Activity Log</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Recent player actions</div></div>
+        <div class="tbl-wrap">
+          <div class="tbl-head">
+            <div class="tbl-title">All Activity</div>
+            <input class="search-inp" id="actSearch" placeholder="🔍  Filter by player..." oninput="renderActivity()">
+          </div>
+          <div style="padding:0 18px;" id="actLog"></div>
+        </div>
+      </div>
+
+      <!-- ONLINE NOW -->
+      <div class="tab" id="tab-online">
+        <div style="margin-bottom:16px;"><div style="font-size:18px;font-weight:700;">Online Players</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Active in the last 90 seconds</div></div>
+        <div id="onlineGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
+      </div>
+
+      <!-- TOP LIST -->
+      <div class="tab" id="tab-toplist">
+        <div style="margin-bottom:16px;"><div style="font-size:18px;font-weight:700;">Top Players</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" id="toplistGrid"></div>
+      </div>
+
+      <!-- DANGER ZONE -->
+      <div class="tab" id="tab-danger">
+        <div style="margin-bottom:16px;"><div style="font-size:18px;font-weight:700;color:var(--red);">⚠️ Danger Zone</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Irreversible actions — proceed with caution</div></div>
+        <div class="danger-card">
+          <h3>🗑️ Delete Specific Player</h3>
+          <p>Permanently remove a player account and all their game data.</p>
+          <div style="display:flex;gap:8px;">
+            <input class="search-inp" id="delUserInp" placeholder="Enter username to delete..." style="width:240px;">
+            <button class="btn-sm danger" onclick="deletePlayerPrompt()">Delete Player</button>
+          </div>
+        </div>
+        <div class="danger-card">
+          <h3>🔄 Reset Player Stats</h3>
+          <p>Wipe a player's game progress but keep their account.</p>
+          <div style="display:flex;gap:8px;">
+            <input class="search-inp" id="resetUserInp" placeholder="Enter username to reset..." style="width:240px;">
+            <button class="btn-sm danger" onclick="resetPlayerPrompt()">Reset Stats</button>
+          </div>
+        </div>
+        <div class="danger-card">
+          <h3>💣 Wipe All Players</h3>
+          <p>Delete every player account. This cannot be undone.</p>
+          <button class="btn-sm danger" onclick="wipeAllPrompt()">Wipe Everything</button>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="tab" id="tab-settings">
+        <div style="margin-bottom:16px;"><div style="font-size:18px;font-weight:700;">Admin Settings</div></div>
+        <div class="tbl-wrap" style="max-width:420px;">
+          <div class="tbl-head"><div class="tbl-title">Change Admin Credentials</div></div>
+          <div style="padding:18px;">
+            <div class="fg"><label>NEW USERNAME</label><input id="newAdminUser" placeholder="admin"></div>
+            <div class="fg"><label>NEW PASSWORD</label><input type="password" id="newAdminPass" placeholder="••••••••"></div>
+            <div class="fg"><label>CONFIRM PASSWORD</label><input type="password" id="newAdminPass2" placeholder="••••••••"></div>
+            <div id="settingsMsg" style="font-size:12px;margin-bottom:10px;display:none;"></div>
+            <button class="btn-sm" onclick="saveAdminCreds()" style="border-color:var(--green);color:var(--green);">Save Credentials</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end pmain -->
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+const DB_KEY     = 'ytcreator_db_v4';   // must match main game
+const ADMIN_KEY  = 'ytcreator_admin';
+const DEFAULT_ADMIN = { username:'admin', password:'admin123' };
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+function loadDB(){
+  try{ return JSON.parse(localStorage.getItem(DB_KEY)) || {users:{}, worldEpoch:null}; }
+  catch{ return {users:{}, worldEpoch:null}; }
+}
+function saveDB(db){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+function loadAdmin(){
+  try{ return JSON.parse(localStorage.getItem(ADMIN_KEY)) || DEFAULT_ADMIN; }
+  catch{ return DEFAULT_ADMIN; }
+}
+function saveAdmin(a){ localStorage.setItem(ADMIN_KEY, JSON.stringify(a)); }
+
+function fmt(n){
+  n = Math.floor(n||0);
+  if(n >= 1e12) return (n/1e12).toFixed(1)+'T';
+  if(n >= 1e9)  return (n/1e9).toFixed(2)+'B';
+  if(n >= 1e6)  return (n/1e6).toFixed(2)+'M';
+  if(n >= 1e3)  return (n/1e3).toFixed(1)+'K';
+  return n.toString();
+}
+
+function timeAgo(ts){
+  if(!ts) return 'Never';
+  const s = Math.floor((Date.now()-ts)/1000);
+  if(s < 5)   return 'Just now';
+  if(s < 60)  return s+'s ago';
+  if(s < 3600) return Math.floor(s/60)+'m ago';
+  if(s < 86400) return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+function isOnline(lastSeen){ return Date.now() - (lastSeen||0) < 90000; }
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DIM    = [31,28,31,30,31,30,31,31,30,31,30,31];
+
+function gameSecondsToDate(secs){
+  const totalDays = Math.floor(secs/1440);
+  let year=2020, month=0, day=totalDays;
+  while(true){
+    const d = DIM[month]+(month===1&&year%4===0?1:0);
+    if(day<d) break;
+    day-=d; month++; if(month>11){month=0;year++;}
+  }
+  return {year, month, day:day+1};
+}
+
+function worldTimeStr(){
+  const db = loadDB();
+  if(!db.worldEpoch) return 'Clock not started';
+  const secs = Math.floor((Date.now()-db.worldEpoch)/1000);
+  const d    = gameSecondsToDate(secs);
+  const h    = (Math.floor(secs/60)%24).toString().padStart(2,'0');
+  const m    = (secs%60).toString().padStart(2,'0');
+  return MONTHS[d.month]+' '+d.day+', '+d.year+' · '+h+':'+m;
+}
+
+function getPlayers(){
+  const db = loadDB();
+  return Object.entries(db.users).map(([u,d])=>({
+    username   : u,
+    password   : d.password ? atob(d.password) : '—',
+    channelName: d.game?.channelName || d.channelName || u,
+    avatar     : d.game?.avatar || d.avatar || '🎮',
+    niche      : d.game?.niche  || d.niche  || '—',
+    subs       : d.game?.subs   || 0,
+    views      : d.game?.views  || 0,
+    money      : d.game?.money  || 0,
+    videos     : d.game?.videos?.length || 0,
+    level      : d.game?.level  || 1,
+    xp         : d.game?.xp     || 0,
+    skills     : d.game?.skills || {},
+    upgrades   : d.game?.upgrades || [],
+    skillPoints: d.game?.skillPoints || 0,
+    created    : d.created || 0,
+    lastSeen   : d.lastSeen || 0,
+    activityLog: d.game?.activityLog || [],
+    topVideos  : (d.game?.videos||[]).sort((a,b)=>b.views-a.views).slice(0,5),
+    allVideos  : d.game?.videos || [],
+    sessionEarnings: d.game?.sessionEarnings || 0,
+    algo       : d.game?.algo || {},
+    cpmBonus   : d.game?.cpmBonus || 1,
+    gameDay    : d.game?.gameDay || 1,
+  }));
+}
+
+// ─────────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────────
+let loggedAdmin = null;
+
+function doAdminLogin(){
+  const u = document.getElementById('adminUser').value.trim();
+  const p = document.getElementById('adminPass').value;
+  const admin = loadAdmin();
+  const err = document.getElementById('loginErr');
+  if(u !== admin.username || p !== admin.password){
+    err.textContent = 'Invalid credentials.';
+    err.style.display = 'block';
+    return;
+  }
+  loggedAdmin = u;
+  err.style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('panel').style.display = 'flex';
+  document.getElementById('adminNameDisp').textContent = u;
+  initPanel();
+}
+
+function adminLogout(){
+  loggedAdmin = null;
+  document.getElementById('panel').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='Enter' && !loggedAdmin) doAdminLogin();
+});
+
+// ─────────────────────────────────────────────
+// PANEL INIT
+// ─────────────────────────────────────────────
+let refreshTimer = null;
+let currentSort  = { key:'lastSeen', dir:-1 };
+
+function initPanel(){
+  renderAll();
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(()=>{
+    renderAll();
+    document.getElementById('ahClock').textContent = worldTimeStr();
+  }, 3000);
+  document.getElementById('ahClock').textContent = worldTimeStr();
+}
+
+function renderAll(){
+  const players = getPlayers();
+  updateSidebarStats(players);
+  updateTopStats(players);
+  // Only render the active tab
+  const active = document.querySelector('.tab.active');
+  if(active){
+    const id = active.id.replace('tab-','');
+    renderTab(id, players);
+  }
+}
+
+function renderTab(id, players){
+  players = players || getPlayers();
+  if(id==='players')    renderPlayers(players);
+  if(id==='worldstats') renderWorldStats(players);
+  if(id==='activity')   renderActivity(players);
+  if(id==='online')     renderOnline(players);
+  if(id==='toplist')    renderToplist(players);
+}
+
+function goTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.psb-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  document.querySelectorAll('.psb-item').forEach(n=>{
+    if(n.textContent.trim().toLowerCase().includes(
+      id==='players'?'player':id==='worldstats'?'world':
+      id==='activity'?'activity':id==='online'?'online':
+      id==='toplist'?'top':id==='danger'?'danger':'settings'
+    )) n.classList.add('active');
+  });
+  renderTab(id);
+}
+
+function updateSidebarStats(players){
+  const online = players.filter(p=>isOnline(p.lastSeen)).length;
+  document.getElementById('sbTotalPlayers').textContent = players.length;
+  document.getElementById('sbOnline').textContent = online;
+}
+
+function updateTopStats(players){
+  const now = Date.now();
+  const online = players.filter(p=>isOnline(p.lastSeen)).length;
+  const today  = players.filter(p=> now-p.created < 86400000).length;
+  const avgSubs = players.length ? Math.floor(players.reduce((a,p)=>a+p.subs,0)/players.length) : 0;
+  document.getElementById('tsTotal').textContent  = players.length;
+  document.getElementById('tsOnline').textContent = online;
+  document.getElementById('tsNewToday').textContent = today;
+  document.getElementById('tsAvgSubs').textContent  = fmt(avgSubs);
+}
+
+// ─────────────────────────────────────────────
+// PLAYERS TABLE
+// ─────────────────────────────────────────────
+function sortBy(key){
+  if(currentSort.key === key) currentSort.dir *= -1;
+  else { currentSort.key = key; currentSort.dir = -1; }
+  document.querySelectorAll('.sort-arrow').forEach(el=>{ el.textContent=''; el.classList.remove('active'); });
+  const el = document.getElementById('sa-'+key);
+  if(el){ el.textContent = currentSort.dir === -1 ? '↓' : '↑'; el.classList.add('active'); }
+  renderPlayers();
+}
+
+function renderPlayers(players){
+  players = players || getPlayers();
+  const q = (document.getElementById('searchInp')?.value||'').toLowerCase();
+  if(q) players = players.filter(p=>
+    p.username.toLowerCase().includes(q) ||
+    p.channelName.toLowerCase().includes(q) ||
+    p.niche.toLowerCase().includes(q)
+  );
+  const k = currentSort.key, d = currentSort.dir;
+  players.sort((a,b)=>{
+    let av=a[k], bv=b[k];
+    if(typeof av==='string') return d*av.localeCompare(bv);
+    return d*(bv-av);
+  });
+
+  const tbody = document.getElementById('playersTbody');
+  if(!players.length){ tbody.innerHTML='<tr><td colspan="12" class="empty">No players found</td></tr>'; return; }
+
+  tbody.innerHTML = players.map((p,i)=>{
+    const on = isOnline(p.lastSeen);
+    const pill = on
+      ? `<span class="online-pill on"><span class="dot on"></span>Online</span>`
+      : `<span class="online-pill off"><span class="dot off"></span>${timeAgo(p.lastSeen)}</span>`;
+    const subsColor = p.subs>=1000000?'color:var(--yellow)':p.subs>=100000?'color:var(--green)':'';
+    return `<tr>
+      <td style="white-space:nowrap">
+        <span class="av">${p.avatar}</span>
+        <span style="margin-left:7px;font-weight:500;">${p.username}</span>
+      </td>
+      <td style="font-weight:500;">${p.channelName}</td>
+      <td class="pass-cell">
+        <span id="pw-${p.username}">••••••••</span>
+        <button class="show-btn" onclick="togglePass('${p.username}','${p.password}')">Show</button>
+      </td>
+      <td><span class="badge b-blue">${p.niche}</span></td>
+      <td style="${subsColor};font-weight:600;">${fmt(p.subs)}</td>
+      <td>${fmt(p.views)}</td>
+      <td style="color:var(--green)">$${fmt(p.money)}</td>
+      <td>${p.videos}</td>
+      <td><span class="badge b-purple">Lv ${p.level}</span></td>
+      <td style="white-space:nowrap;color:var(--muted2)">${timeAgo(p.lastSeen)}</td>
+      <td>${pill}</td>
+      <td style="white-space:nowrap">
+        <button class="action-btn" onclick="openPlayer('${p.username}')">👁 View</button>
+        <button class="action-btn del" onclick="confirmDeletePlayer('${p.username}')" style="margin-left:4px;">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function togglePass(username, pass){
+  const el = document.getElementById('pw-'+username);
+  if(!el) return;
+  if(el.textContent === '••••••••'){
+    el.textContent = pass;
+    el.nextElementSibling.textContent = 'Hide';
+  } else {
+    el.textContent = '••••••••';
+    el.nextElementSibling.textContent = 'Show';
+  }
+}
+
+// ─────────────────────────────────────────────
+// PLAYER DETAIL MODAL
+// ─────────────────────────────────────────────
+function openPlayer(username){
+  const players = getPlayers();
+  const p = players.find(x=>x.username===username);
+  if(!p) return;
+  document.getElementById('modalTitle').innerHTML = `${p.avatar} ${p.username} — <span style="color:var(--muted2);font-weight:400">${p.channelName}</span>`;
+  const on = isOnline(p.lastSeen);
+
+  const skillNames = {editing:'Editing',thumbnail:'Thumbnail',script:'Script',seo:'SEO',consistency:'Consistency',charisma:'Charisma'};
+  const skillRows = Object.entries(p.skills).map(([k,v])=>
+    `<div class="info-row"><span class="info-key">${skillNames[k]||k}</span><span class="info-val">Level ${v}</span></div>`
+  ).join('');
+
+  const upgList = p.upgrades.length ? p.upgrades.join(', ') : 'None';
+
+  const topVids = p.topVideos.length ? p.topVideos.map(v=>`
+    <div class="vid-mini">
+      <div class="vid-mini-tt">${v.icon||'🎬'} ${v.title}</div>
+      <div class="vid-mini-st">
+        <span>👁 ${fmt(v.views)} views</span>
+        <span>+${v.subs} subs</span>
+        <span>$${v.revenue}</span>
+        <span>⏱ ${v.retention}%</span>
+        <span>Day ${v.day}</span>
+      </div>
+    </div>`).join('') : '<div style="font-size:12px;color:var(--muted);padding:8px 0;">No videos yet</div>';
+
+  const recentActivity = p.activityLog.slice(0,10).map(a=>
+    `<div class="act-item"><span class="act-time">Day ${a.day||'?'}</span><span class="act-msg">${a.msg}</span></div>`
+  ).join('') || '<div style="font-size:12px;color:var(--muted);padding:8px 0;">No activity</div>';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <div style="width:54px;height:54px;border-radius:50%;background:var(--surface2);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;">${p.avatar}</div>
+      <div>
+        <div style="font-size:15px;font-weight:700;">@${p.username}</div>
+        <div style="font-size:13px;color:var(--muted2);">${p.channelName}</div>
+        <div style="margin-top:4px;">${on
+          ? '<span class="online-pill on" style="font-size:11px;"><span class="dot on"></span>Online now</span>'
+          : `<span class="online-pill off" style="font-size:11px;"><span class="dot off"></span>Last seen ${timeAgo(p.lastSeen)}</span>`}
+          <span class="badge b-purple" style="margin-left:6px;">Level ${p.level}</span>
+          <span class="badge b-blue" style="margin-left:4px;">${p.niche}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-stat"><div class="detail-stat-v" style="color:var(--yellow)">${fmt(p.subs)}</div><div class="detail-stat-l">👥 Subscribers</div></div>
+      <div class="detail-stat"><div class="detail-stat-v">${fmt(p.views)}</div><div class="detail-stat-l">👁 Total Views</div></div>
+      <div class="detail-stat"><div class="detail-stat-v" style="color:var(--green)">$${fmt(p.money)}</div><div class="detail-stat-l">💰 Revenue</div></div>
+      <div class="detail-stat"><div class="detail-stat-v">${p.videos}</div><div class="detail-stat-l">🎬 Videos</div></div>
+      <div class="detail-stat"><div class="detail-stat-v" style="color:var(--purple)">${p.skillPoints}</div><div class="detail-stat-l">✨ Skill Points</div></div>
+      <div class="detail-stat"><div class="detail-stat-v" style="color:var(--red)">${p.cpmBonus}×</div><div class="detail-stat-l">💵 CPM Bonus</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+      <div>
+        <div class="section-label">Account Info</div>
+        <div class="info-row"><span class="info-key">Username</span><span class="info-val">@${p.username}</span></div>
+        <div class="info-row"><span class="info-key">Password</span><span class="info-val" style="font-family:monospace">${p.password}</span></div>
+        <div class="info-row"><span class="info-key">Registered</span><span class="info-val">${p.created ? new Date(p.created).toLocaleString() : '—'}</span></div>
+        <div class="info-row"><span class="info-key">Last Online</span><span class="info-val">${p.lastSeen ? new Date(p.lastSeen).toLocaleString() : '—'}</span></div>
+        <div class="info-row"><span class="info-key">Game Day</span><span class="info-val">Day ${p.gameDay}</span></div>
+        <div class="info-row"><span class="info-key">Upgrades</span><span class="info-val">${upgList}</span></div>
+      </div>
+      <div>
+        <div class="section-label">Skills</div>
+        ${skillRows}
+        <div class="section-label" style="margin-top:12px;">Algorithm</div>
+        <div class="info-row"><span class="info-key">Consistency</span><span class="info-val">${Math.floor(p.algo.consistency||0)}%</span></div>
+        <div class="info-row"><span class="info-key">Retention</span><span class="info-val">${Math.floor(p.algo.retention||0)}%</span></div>
+        <div class="info-row"><span class="info-key">Overall</span><span class="info-val">${Math.floor(p.algo.overall||0)}%</span></div>
+      </div>
+    </div>
+
+    <div class="section-label">🏆 Top Videos</div>
+    <div style="margin-bottom:18px;">${topVids}</div>
+
+    <div class="section-label">📋 Recent Activity</div>
+    <div>${recentActivity}</div>
+  `;
+  document.getElementById('playerModal').classList.add('show');
+}
+function closeModal(){ document.getElementById('playerModal').classList.remove('show'); }
+document.getElementById('playerModal').addEventListener('click', e=>{ if(e.target===document.getElementById('playerModal')) closeModal(); });
+
+// ─────────────────────────────────────────────
+// WORLD STATS
+// ─────────────────────────────────────────────
+function renderWorldStats(players){
+  players = players || getPlayers();
+  const totalSubs    = players.reduce((a,p)=>a+p.subs,0);
+  const totalViews   = players.reduce((a,p)=>a+p.views,0);
+  const totalMoney   = players.reduce((a,p)=>a+p.money,0);
+  const totalVideos  = players.reduce((a,p)=>a+p.videos,0);
+  const totalPlayers = players.length;
+  const online       = players.filter(p=>isOnline(p.lastSeen)).length;
+
+  document.getElementById('wstatGrid').innerHTML = [
+    {v:fmt(totalSubs),  l:'Total Subscribers',  c:'--yellow'},
+    {v:fmt(totalViews), l:'Total Views',         c:'--text'},
+    {v:'$'+fmt(totalMoney), l:'Total Revenue',   c:'--green'},
+    {v:totalVideos,     l:'Videos Created',       c:'--blue'},
+    {v:totalPlayers,    l:'Registered Players',   c:'--text'},
+    {v:online,          l:'Currently Online',     c:'--green'},
+  ].map(s=>`<div class="wstat"><div class="wstat-v" style="color:var(${s.c})">${s.v}</div><div class="wstat-l">${s.l}</div></div>`).join('');
+
+  // Niche distribution
+  const niches = {};
+  players.forEach(p=>{ niches[p.niche] = (niches[p.niche]||0)+1; });
+  const maxN = Math.max(...Object.values(niches),1);
+  document.getElementById('nicheDistrib').innerHTML = Object.entries(niches)
+    .sort((a,b)=>b[1]-a[1]).map(([n,c])=>`
+      <div style="padding:10px 16px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+          <span>${n}</span><span style="color:var(--muted2)">${c} player${c!==1?'s':''}</span>
+        </div>
+        <div style="background:var(--surface3);border-radius:3px;height:4px;overflow:hidden;">
+          <div style="width:${(c/maxN)*100}%;height:100%;background:var(--blue);border-radius:3px;"></div>
+        </div>
+      </div>`).join('') || '<div class="empty">No data</div>';
+
+  // Registrations bar chart (last 7 days)
+  const days = Array(7).fill(0);
+  const now = Date.now();
+  players.forEach(p=>{
+    const daysAgo = Math.floor((now - p.created) / 86400000);
+    if(daysAgo < 7) days[6-daysAgo]++;
+  });
+  const maxD = Math.max(...days, 1);
+  document.getElementById('regChart').innerHTML =
+    `<div style="display:flex;align-items:flex-end;gap:6px;height:80px;">` +
+    days.map((d,i)=>{
+      const h = Math.max(3, Math.floor((d/maxD)*72));
+      const label = i===6?'Today': i===5?'Yest.':(6-i)+'d ago';
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <div style="font-size:9px;color:var(--muted)">${d||''}</div>
+        <div style="width:100%;height:${h}px;background:var(--red);border-radius:3px 3px 0 0;min-height:3px;opacity:.8;"></div>
+        <div style="font-size:8px;color:var(--muted);white-space:nowrap">${label}</div>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+// ─────────────────────────────────────────────
+// ACTIVITY LOG
+// ─────────────────────────────────────────────
+function renderActivity(players){
+  players = players || getPlayers();
+  const q = (document.getElementById('actSearch')?.value||'').toLowerCase();
+
+  // Collect all activity from all players
+  let all = [];
+  players.forEach(p=>{
+    p.activityLog.forEach(a=>{
+      all.push({ username:p.username, avatar:p.avatar, msg:a.msg, day:a.day, hour:a.hour||0 });
+    });
+  });
+
+  if(q) all = all.filter(a=>a.username.toLowerCase().includes(q));
+  all.sort((a,b)=>(b.day*24+b.hour)-(a.day*24+a.hour));
+  all = all.slice(0, 100);
+
+  document.getElementById('actLog').innerHTML = all.length ? all.map(a=>`
+    <div class="act-item">
+      <span class="act-time">${a.avatar} <b>${a.username}</b></span>
+      <span class="act-msg">${a.msg}</span>
+      <span style="font-size:10px;color:var(--muted);white-space:nowrap;margin-left:auto;">Day ${a.day}</span>
+    </div>`).join('')
+    : '<div class="empty">No activity found</div>';
+}
+
+// ─────────────────────────────────────────────
+// ONLINE NOW
+// ─────────────────────────────────────────────
+function renderOnline(players){
+  players = players || getPlayers();
+  const online = players.filter(p=>isOnline(p.lastSeen));
+  const grid = document.getElementById('onlineGrid');
+  if(!online.length){
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1">No players online right now</div>';
+    return;
+  }
+  grid.innerHTML = online.map(p=>`
+    <div style="background:var(--surface);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px;cursor:pointer;" onclick="openPlayer('${p.username}')">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="font-size:24px;">${p.avatar}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;">@${p.username}</div>
+          <div style="font-size:11px;color:var(--muted2);">${p.channelName}</div>
+        </div>
+        <div style="margin-left:auto;"><span class="online-pill on" style="font-size:10px;"><span class="dot on"></span>Live</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div style="background:var(--surface2);border-radius:6px;padding:7px 9px;">
+          <div style="font-size:14px;font-weight:700;color:var(--yellow)">${fmt(p.subs)}</div>
+          <div style="font-size:10px;color:var(--muted)">Subscribers</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:6px;padding:7px 9px;">
+          <div style="font-size:14px;font-weight:700;color:var(--green)">$${fmt(p.money)}</div>
+          <div style="font-size:10px;color:var(--muted)">Revenue</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ─────────────────────────────────────────────
+// TOP LIST
+// ─────────────────────────────────────────────
+function renderToplist(players){
+  players = players || getPlayers();
+  const categories = [
+    {title:'👥 Most Subscribers', key:'subs', color:'--yellow'},
+    {title:'👁 Most Views',        key:'views', color:'--text'},
+    {title:'💰 Highest Revenue',  key:'money', color:'--green'},
+    {title:'🎬 Most Videos',       key:'videos', color:'--blue'},
+  ];
+  document.getElementById('toplistGrid').innerHTML = categories.map(cat=>{
+    const sorted = [...players].sort((a,b)=>b[cat.key]-a[cat.key]).slice(0,5);
+    const rows = sorted.map((p,i)=>{
+      const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:16px;width:22px;text-align:center;">${medals[i]}</span>
+        <span style="font-size:16px;">${p.avatar}</span>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:600;">@${p.username}</div>
+          <div style="font-size:10px;color:var(--muted2);">${p.channelName}</div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(${cat.color})">${cat.key==='money'?'$'+fmt(p[cat.key]):fmt(p[cat.key])}</div>
+      </div>`;
+    }).join('') || '<div style="font-size:12px;color:var(--muted);padding:8px 0;">No data</div>';
+    return `<div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">${cat.title}</div></div>
+      <div style="padding:0 16px;">${rows}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// DANGER ZONE
+// ─────────────────────────────────────────────
+let pendingAction = null;
+
+function openConfirm(title, msg, onOk){
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent   = msg;
+  document.getElementById('confirmOk').onclick = ()=>{ closeConfirm(); onOk(); };
+  document.getElementById('confirmBg').classList.add('show');
+}
+function closeConfirm(){ document.getElementById('confirmBg').classList.remove('show'); }
+
+function deletePlayerPrompt(){
+  const u = document.getElementById('delUserInp').value.trim().toLowerCase();
+  if(!u){ alert('Enter a username.'); return; }
+  const db = loadDB();
+  if(!db.users[u]){ alert('User "'+u+'" not found.'); return; }
+  openConfirm('Delete "'+u+'"?', 'This will permanently remove their account and all game data.', ()=>{
+    const db2 = loadDB();
+    delete db2.users[u];
+    saveDB(db2);
+    document.getElementById('delUserInp').value = '';
+    renderAll();
+    alert('Player "'+u+'" deleted.');
+  });
+}
+
+function confirmDeletePlayer(username){
+  openConfirm('Delete "'+username+'"?', 'This will permanently remove their account and all game data.', ()=>{
+    const db = loadDB();
+    delete db.users[username];
+    saveDB(db);
+    closeModal();
+    renderAll();
+  });
+}
+
+function resetPlayerPrompt(){
+  const u = document.getElementById('resetUserInp').value.trim().toLowerCase();
+  if(!u){ alert('Enter a username.'); return; }
+  const db = loadDB();
+  if(!db.users[u]){ alert('User "'+u+'" not found.'); return; }
+  openConfirm('Reset "'+u+'"?', 'Wipe all game progress but keep the account.', ()=>{
+    const db2 = loadDB();
+    const d = db2.users[u];
+    db2.users[u].game = {
+      subs:0,views:0,money:0,xp:0,level:1,videos:[],
+      skills:{editing:1,thumbnail:1,script:1,seo:1,consistency:0,charisma:1},
+      skillPoints:0,upgrades:[],algo:{consistency:0,retention:30,trend:0,overall:10},
+      lastUpload:0,activityLog:[],topicStats:{},totalPlayTime:0,
+      gameDay:1,gameHour:0,lastSeenGameSecond:0,
+      sessionStart:Date.now(),sessionEarnings:0,
+      trends:[],activeTrend:null,
+      channelName:d.channelName||u, avatar:d.avatar||'🎮', niche:d.niche||'Gaming', cpmBonus:1
+    };
+    saveDB(db2);
+    document.getElementById('resetUserInp').value = '';
+    renderAll();
+    alert('Stats reset for "'+u+'".');
+  });
+}
+
+function wipeAllPrompt(){
+  openConfirm('Wipe ALL players?', 'This deletes every account. Only the world clock and admin credentials are kept.', ()=>{
+    const db = loadDB();
+    db.users = {};
+    saveDB(db);
+    renderAll();
+    alert('All players wiped.');
+  });
+}
+
+// ─────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────
+function saveAdminCreds(){
+  const u  = document.getElementById('newAdminUser').value.trim();
+  const p  = document.getElementById('newAdminPass').value;
+  const p2 = document.getElementById('newAdminPass2').value;
+  const msg = document.getElementById('settingsMsg');
+  if(!u||!p){ msg.textContent='Fill in all fields.'; msg.style.color='var(--red)'; msg.style.display='block'; return; }
+  if(p!==p2){ msg.textContent='Passwords do not match.'; msg.style.color='var(--red)'; msg.style.display='block'; return; }
+  saveAdmin({username:u, password:p});
+  loggedAdmin = u;
+  document.getElementById('adminNameDisp').textContent = u;
+  msg.textContent = '✅ Credentials updated!';
+  msg.style.color = 'var(--green)';
+  msg.style.display = 'block';
+  setTimeout(()=>msg.style.display='none', 3000);
+}
+</script>
+</body>
+</html>
